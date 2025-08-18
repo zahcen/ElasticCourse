@@ -19,6 +19,11 @@ metricbeat.modules:
   period: 10s
   enabled: true
 
+setup.kibana:
+  host: "http://10.0.2.15:5601"
+  protocol: "http"
+  ssl.enabled: false
+
 output.elasticsearch:
   # Array of hosts to connect to.
   hosts: ["https://10.0.2.15:9200"]
@@ -29,7 +34,7 @@ output.elasticsearch:
   # Authentication credentials - either API key or username/password.
   #api_key: "id:api_key"
   username: "elastic"
-  password: "onw06_8uvZjvZWpotiGk"
+  password: "elastic"
   ssl.verification_mode: "none"
 
 processors:

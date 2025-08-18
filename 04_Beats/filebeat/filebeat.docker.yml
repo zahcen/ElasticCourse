@@ -12,8 +12,14 @@ processors:
 - add_docker_metadata: 
     host: "unix:///var/run/docker.sock"
 
+setup.kibana:
+  host: "http://10.0.2.15:5601"
+  protocol: "http"
+  ssl.enabled: false
+
+
 output.elasticsearch:
   hosts: ["https://10.0.2.15:9200"]
   username: "elastic"
-  password: "onw06_8uvZjvZWpotiGk"
+  password: "elastic"
   ssl.verification_mode: "none"

@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   metricbeat:
-    image: docker.elastic.co/beats/metricbeat:8.1.0
+    image: docker.elastic.co/beats/metricbeat:8.5.1
     container_name: "metricbeat"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -12,3 +12,4 @@ services:
       - ./metricbeat.docker.yml:/usr/share/metricbeat/metricbeat.yml:ro
     command: metricbeat -e -strict.perms=false
     user: root
+# metricbeat -e -strict.perms=false setup dashboard

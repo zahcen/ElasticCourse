@@ -9,9 +9,11 @@ heartbeat.monitors:
         step("load homepage", async () => {
           await page.goto('https://www.elastic.co');
         });
-        step("hover over products menu", async () => {
-          await page.hover('css=[data-nav-item=products]');
-        });
+
+setup.kibana:
+  host: "http://10.0.2.15:5601"
+  protocol: "http"
+  ssl.enabled: false
 
 # ---------------------------- Elasticsearch Output ----------------------------
 output.elasticsearch:
@@ -24,5 +26,5 @@ output.elasticsearch:
   # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
   hosts: ["https://10.0.2.15:9200"]
   username: "elastic"
-  password: "onw06_8uvZjvZWpotiGk"
+  password: "elastic"
   ssl.verification_mode: "none"

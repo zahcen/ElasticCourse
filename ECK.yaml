@@ -1,0 +1,66 @@
+#kubectl create -f https://download.elastic.co/downloads/eck/3.1.0/crds.yaml
+#kubectl apply -f https://download.elastic.co/downloads/eck/3.1.0/operator.yaml
+#kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
+#kubectl get -n elastic-system pods
+
+# Persistent Volume for Elasticsearch
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: elastic-filesystem
+spec:
+  capacity:
+    storage: 5Gi        # Size of the volume
+  volumeMode: Filesystem # Ensure this is a filesystem, not a block device
+  accessModes:
+    - ReadWriteOnce      # Mounted to a single node at a time
+  persistentVolumeReclaimPolicy: Retain
+#  storageClassName: managed-csi
+  storageClassName: manual
+  hostPath:            
+    path: /mnt/data/elasticsearch
+    type: DirectoryOrCreate
+
+---
+
+#Elasticsearch Deployment
+# This is a sample Elasticsearch deployment using ECK (Elastic Cloud on Kubernetes)
+
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  podDisruptionBudget:
+  nodeSets:
+  - name: nodes
+    count: 1
+    config:
+      node.store.allow_mmap: false
+    podTemplate:
+            spec:
+              containers:
+                - name: elasticsearch
+                  resources:
+                    requests:
+                      memory: 2Gi
+                      cpu: 1
+                    limits:
+                      memory: 4Gi
+                      cpu: 2
+          volumeClaimTemplates:
+            - metadata:
+                name: elasticsearch-data
+              spec:
+                storageClassName: manual
+                accessModes:
+                  - ReadWriteOnce
+                resources:
+                  requests:
+                    storage: 5Gi
+
+---
+
+
