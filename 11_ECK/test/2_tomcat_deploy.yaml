@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ht-tomcat
+  namespace: hello-telemetry
+  annotations:
+        instrumentation.opentelemetry.io/inject-java: "true"
+spec:
+  selector:
+    matchLabels:
+      app: ht-tomcat
+  template:
+    metadata:
+      labels:
+        app: ht-tomcat
+    spec:
+      containers:
+        - name: tomcat
+          imagePullPolicy: Always
+          image: zahcen/hello-telemetry-java-app:latest
+          ports:
+            - containerPort: 8080
+            - containerPort: 9010
+            - containerPort: 1099
+          # env:
+          #   - name: JAVA_OPTS
+          #     value: >-
+          #             -javaagent:/usr/local/tomcat/lib/elastic-otel-javaagent-1.5.0.jar
+          #             -Dotel.exporter.otlp.endpoint=http://apm-server-apm-http.elastic-system.svc.cluster.local:8200                         
+          #             -Dotel.exporter.otlp.headers="Authorization=Bearer hO0KclwB9Wp75RVR54c3A621"
+          #             -Dotel.javaagent.debug=true
+          #             -Dotel.exporter.otlp.insecure=true
+          #             -Dotel.logs.exporter=otlp
+          #             -Dotel.metrics.exporter=otlp
+          #             -Dotel.resource.attributes="service.name=tomcat-app-admin-cluster,service.version=1.0.0,deployment.environment=ADMIN-CLUSTER"
+          #             -Dotel.traces.exporter=otlp
+          
+          readinessProbe:
+            httpGet:
+              path: /MyWebApp/
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: dockerhub-secret

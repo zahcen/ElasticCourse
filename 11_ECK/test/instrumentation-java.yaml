@@ -1,0 +1,51 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: java-instrumentation
+  namespace: opentelemetry
+spec:
+  exporter:
+    endpoint: http://opentelemetry-collector.opentelemetry:4317
+  
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+  
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1.0"
+  
+  java:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.17.0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: "service.name=tomcat-app-instrumentation,service.version=1.0.0,deployment.environment=ADMIN-CLUSTER"
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp  # ACTIVER les logs OTLP
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
+      - name: OTEL_LOG_LEVEL
+        value: INFO
+      
+      # Configuration des logs
+      - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED
+        value: "true"  # ACTIVER l'appender Logback
+      - name: OTEL_INSTRUMENTATION_LOGBACK_MDC_ADD_BAGGAGE
+        value: "true"
+      
+      # Autres instrumentations
+      - name: OTEL_INSTRUMENTATION_SPRING_WEBMVC_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_JDBC_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_SPRING_BOOT_ENABLED
+        value: "true"

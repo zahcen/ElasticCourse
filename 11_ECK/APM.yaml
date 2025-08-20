@@ -1,0 +1,35 @@
+apiVersion: apm.k8s.elastic.co/v1
+kind: ApmServer
+metadata:
+  name: apm-server-1
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  count: 1
+  config:
+    output.elasticsearch:
+      hosts: ["https://elasticsearch-es-http:9200"]
+      protocol: "https"
+      username: "elastic"
+      password: "I6mR19wELd468e28ZnfOM6y7"
+      ssl.verification_mode: "none"
+
+  # config:
+  #   output:
+  #     elasticsearch:
+  #       hosts: ["https://elasticsearch-es-http:9200"]   # custom host and port
+  #       protocol: "https"
+  #       username: "elastic"
+  #       password: "I6mR19wELd468e28ZnfOM6y7"
+  #       ssl.verification_mode: "none"  # disables SSL verification
+  podTemplate:
+    spec:
+      containers:
+        - name: apm-server
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 0.25
+            limits:
+              memory: 1Gi
+              cpu: 0.5

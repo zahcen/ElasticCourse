@@ -1,0 +1,308 @@
+#kubectl create -f https://download.elastic.co/downloads/eck/3.1.0/crds.yaml
+#kubectl apply -f https://download.elastic.co/downloads/eck/3.1.0/operator.yaml
+
+#kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
+#kubectl get -n elastic-system pods
+
+#openssl genrsa -out tls.key 2048
+##openssl req -new -x509 -key tls.key -out tls.crt -days 3650 -subj "/CN=kibana.zitaconseil.fr/O=Zita Conseil"
+#openssl req -new -key tls.key -out tls.csr -subj "/C=FR/ST=Ile-de-France/L=Paris/O=MyCompany/OU=IT/CN=example.com"
+#openssl x509 -req -in tls.csr -signkey tls.key -out tls.crt -days 3650
+#kubectl -n istio-system create secret tls gateway-cert --cert=./tls.crt --key=./tls.key
+
+# apiVersion: networking.istio.io/v1
+# kind: Gateway
+# metadata:
+#   name: istio-gateway
+#   namespace: istio-system
+# spec:
+#   selector:
+#     app: ingressgateway
+#   servers:
+#   - port:
+#       number: 80
+#       name: http
+#       protocol: HTTP
+#     hosts:
+#     - "*"
+#     tls:
+#       httpsRedirect: false # sends 301 redirect for http requests
+#   - port:
+#       number: 443
+#       name: https-443
+#       protocol: HTTPS
+#     hosts:
+#     - "*"
+#     tls:
+#       mode: SIMPLE # enables HTTPS on this port
+#       credentialName: gateway-cert
+
+# ---
+
+# Persistent Volume for Elasticsearch
+# apiVersion: v1
+# kind: PersistentVolume
+# metadata:
+#   name: elastic-filesystem
+# spec:
+#   capacity:
+#     storage: 5Gi        # Size of the volume
+#   volumeMode: Filesystem # Ensure this is a filesystem, not a block device
+#   accessModes:
+#     - ReadWriteOnce      # Mounted to a single node at a time
+#   persistentVolumeReclaimPolicy: Retain
+# #  storageClassName: managed-csi
+#   storageClassName: manual
+#   hostPath:            
+#     path: /mnt/data/elasticsearch
+#     type: DirectoryOrCreate
+---
+
+#Elasticsearch Deployment
+# This is a sample Elasticsearch deployment using ECK (Elastic Cloud on Kubernetes)
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  podDisruptionBudget:
+  nodeSets:
+  - name: master-node
+    count: 1
+    config:
+      node.store.allow_mmap: false
+    podTemplate:
+      spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 1Gi
+                  cpu: 1
+                limits:
+                  memory: 4Gi
+                  cpu: 2
+    volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          storageClassName: managed-premium
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
+
+---
+# Kibana Deployment
+# This is a sample Kibana deployment using ECK (Elastic Cloud on Kubernetes)
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  count: 1
+  elasticsearchRef:
+    name: elasticsearch
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              memory: 1Gi
+              cpu: 0.5
+            limits:
+              memory: 2Gi
+              cpu: 1
+  # http:
+  #   tls:
+  #     selfSignedCertificate:
+  #       disabled: true
+  config:
+    xpack.fleet.packages:
+    - name: apm
+      version: latest
+
+---
+# Istio Gateway for Kibana
+# apiVersion: networking.istio.io/v1
+# kind: VirtualService
+# metadata:
+#   name: kibana-vs
+#   namespace: elastic-system
+# spec:
+#   gateways:
+#   - istio-system/cert-manager-gateway
+#   hosts:
+#   - kibana.zitaconseil.fr
+#   http:
+#   - route:
+#     - destination:
+#         host: kibana-kb-http.elastic-system.svc.cluster.local
+#         port:
+#           number: 5601
+
+# ---
+# apiVersion: networking.istio.io/v1
+# kind: VirtualService
+# metadata:
+#   name: kibana-vs
+#   namespace: elastic-system
+# spec:
+#   gateways:
+#   - istio-system/istio-gateway
+#   hosts:
+#   - kibana.zitaconseil.fr
+#   tls:
+#     - match:
+#         - port: 443
+#           sniHosts:
+#             - kibana.zitaconseil.fr
+#       route:
+#         - destination:
+#             host: kibana-kb-http.elastic-system.svc.cluster.local
+#             port:
+#               number: 5601
+
+---
+
+# APM Server Deployment
+apiVersion: apm.k8s.elastic.co/v1
+kind: ApmServer
+metadata:
+  name: apm-server
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  count: 1
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  # config:
+  #   output:
+  #     elasticsearch:
+  #       hosts: ["https://elasticsearch-es-http:9200"]   # custom host and port
+  #       protocol: "https"
+  #       username: "elastic"
+  #       password: "9506kOC1D01BZMaOL2jo6Ri2"
+  #       ssl.verification_mode: "none"  # disables SSL verification
+  elasticsearchRef:
+    name: elasticsearch
+  #   namespace: elastic-system
+  #   serviceName: elasticsearch-es-http
+  #    secretName: elasticsearch-es-elastic-user
+
+  podTemplate:
+    spec:
+      containers:
+        - name: apm-server
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 0.25
+            limits:
+              memory: 1Gi
+              cpu: 0.5
+          # env:
+          #   - name: ELASTIC_APM_SERVER_HOST
+          #     value: "0.0.0:8200"
+          #   - name: ELASTIC_APM_SERVER_KIBANA_HOST
+          #     value: "kibana:5601"
+
+# ---
+# apiVersion: beat.k8s.elastic.co/v1beta1
+# kind: Beat
+# metadata:
+#   name: beat-filebeat
+#   namespace: elastic-system
+# spec:
+#   type: filebeat
+#   version: 9.1.2
+#   elasticsearchRef:
+#     name: elasticsearch
+#   kibanaRef:
+#     name: kibana  
+#   config:
+#     filebeat.inputs:
+#     - type: container
+#       paths:
+#       - /var/log/containers/*.log
+#   daemonSet:
+#     podTemplate:
+#       spec:
+#         dnsPolicy: ClusterFirstWithHostNet
+#         hostNetwork: true
+#         securityContext:
+#           runAsUser: 0
+#         containers:
+#         - name: filebeat
+#           volumeMounts:
+#           - name: varlogcontainers
+#             mountPath: /var/log/containers
+#           - name: varlogpods
+#             mountPath: /var/log/pods
+#           - name: varlibdockercontainers
+#             mountPath: /var/lib/docker/containers
+#         volumes:
+#         - name: varlogcontainers
+#           hostPath:
+#             path: /var/log/containers
+#         - name: varlogpods
+#           hostPath:
+#             path: /var/log/pods
+#         - name: varlibdockercontainers
+#           hostPath:
+#             path: /var/lib/docker/containers
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: kibana-lb
+  namespace: elastic-system
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"  
+  labels:
+    common.k8s.elastic.co/type: kibana
+    kibana.k8s.elastic.co/name: kibana
+spec:
+  type: LoadBalancer
+  selector:
+    common.k8s.elastic.co/type: kibana
+    kibana.k8s.elastic.co/name: kibana
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 5601
+  sessionAffinity: None
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apm-server-lb
+  namespace: elastic-system
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"  
+  labels:
+    apm.k8s.elastic.co/name: apm-server
+    common.k8s.elastic.co/type: apm-server
+spec:
+  type: LoadBalancer
+  selector:
+    apm.k8s.elastic.co/name: apm-server
+    common.k8s.elastic.co/type: apm-server
+  ports:
+    - name: https
+      protocol: TCP
+      port: 8200
+      targetPort: 8200
+  sessionAffinity: None

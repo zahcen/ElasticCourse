@@ -1,0 +1,11 @@
+---
+eck-kibana:
+  # Count of Kibana replicas to create.
+  #
+  count: 1
+
+  # Reference to ECK-managed Elasticsearch resource, ideally from {{ "elasticsearch.fullname" }}
+  #
+  elasticsearchRef:
+    name: es-quickstart-eck-elasticsearch
+    # namespace: default
