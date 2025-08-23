@@ -3,8 +3,6 @@ kind: Deployment
 metadata:
   name: ht-tomcat
   namespace: hello-telemetry
-  annotations:
-        instrumentation.opentelemetry.io/inject-java: "true"
 spec:
   selector:
     matchLabels:
@@ -13,6 +11,10 @@ spec:
     metadata:
       labels:
         app: ht-tomcat
+        ver: "1.0"
+        version: "2.0"
+      annotations:
+        instrumentation.opentelemetry.io/inject-java: "opentelemetry/java-instrumentation"
     spec:
       containers:
         - name: tomcat

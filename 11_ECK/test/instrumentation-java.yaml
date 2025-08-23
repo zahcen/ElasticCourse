@@ -2,10 +2,10 @@ apiVersion: opentelemetry.io/v1alpha1
 kind: Instrumentation
 metadata:
   name: java-instrumentation
-  namespace: opentelemetry
+  namespace: observability
 spec:
   exporter:
-    endpoint: http://opentelemetry-collector.opentelemetry:4317
+    endpoint: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
   
   propagators:
     - tracecontext
@@ -17,12 +17,14 @@ spec:
     argument: "1.0"
   
   java:
-    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.17.0
+    #image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.17.0
     env:
       - name: OTEL_EXPORTER_OTLP_ENDPOINT
         value: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
+      - name: OTEL_EXPORTER_OTLP_HEADERS
+        value: "Authorization=Bearer hO0KclwB9Wp75RVR54c3A621"
       - name: OTEL_RESOURCE_ATTRIBUTES
-        value: "service.name=tomcat-app-instrumentation,service.version=1.0.0,deployment.environment=ADMIN-CLUSTER"
+        value: "deployment.environment=ADMIN-CLUSTER-1"
       - name: OTEL_TRACES_EXPORTER
         value: otlp
       - name: OTEL_METRICS_EXPORTER

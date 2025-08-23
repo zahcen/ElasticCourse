@@ -1,3 +1,5 @@
+#https://github.com/open-telemetry/opentelemetry-operator/releases/download/v0.131.0/opentelemetry-operator.yaml
+
 apiVersion: v1
 kind: Namespace
 metadata:

@@ -1,6 +1,9 @@
 #kubectl create -f https://download.elastic.co/downloads/eck/3.1.0/crds.yaml
 #kubectl apply -f https://download.elastic.co/downloads/eck/3.1.0/operator.yaml
 
+#kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.18.2/cert-manager.yaml
+
+
 #kubectl -n elastic-system logs -f statefulset.apps/elastic-operator
 #kubectl get -n elastic-system pods
 

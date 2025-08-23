@@ -1,0 +1,269 @@
+#
+#kubectl get secret elasticsearch-es-elastic-user -o go-template='{{.data.elastic | base64decode}}'
+#
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: elastic-filesystem
+spec:
+  capacity:
+    storage: 5Gi        # Size of the volume
+  volumeMode: Filesystem # Ensure this is a filesystem, not a block device
+  accessModes:
+    - ReadWriteOnce      # Mounted to a single node at a time
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:            
+    path: /mnt/data/elasticsearch
+    type: DirectoryOrCreate
+
+---
+
+#Elasticsearch Deployment
+# This is a sample Elasticsearch deployment using ECK (Elastic Cloud on Kubernetes)
+apiVersion: elasticsearch.k8s.elastic.co/v1
+kind: Elasticsearch
+metadata:
+  name: elasticsearch
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  podDisruptionBudget:
+  nodeSets:
+  - name: master-node
+    count: 1
+    config:
+      node.store.allow_mmap: false
+    podTemplate:
+      spec:
+          containers:
+            - name: elasticsearch
+              resources:
+                requests:
+                  memory: 1Gi
+                  cpu: 1
+                limits:
+                  memory: 2Gi
+                  cpu: 2
+    volumeClaimTemplates:
+      - metadata:
+          name: elasticsearch-data
+        spec:
+          storageClassName: manual
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+
+---
+# Kibana Deployment
+# This is a sample Kibana deployment using ECK (Elastic Cloud on Kubernetes)
+apiVersion: kibana.k8s.elastic.co/v1
+kind: Kibana
+metadata:
+  name: kibana
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  count: 1
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  elasticsearchRef:
+    name: elasticsearch
+  podTemplate:
+    spec:
+      containers:
+        - name: kibana
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 0.5
+            limits:
+              memory: 1Gi
+              cpu: 1
+  # http:
+  #   tls:
+  #     selfSignedCertificate:
+  #       disabled: true
+  config:
+    xpack.fleet.packages:
+    - name: apm
+      version: latest
+
+---
+# Istio Gateway for Kibana
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: kibana-vs
+  namespace: elastic-system
+spec:
+  gateways:
+  - istio-system/cert-manager-gateway
+  hosts:
+  - kibana.zitaconseil.fr
+  http:
+  - route:
+    - destination:
+        host: kibana-kb-http.elastic-system.svc.cluster.local
+        port:
+          number: 5601
+
+# ---
+# apiVersion: networking.istio.io/v1
+# kind: VirtualService
+# metadata:
+#   name: kibana-vs
+#   namespace: elastic-system
+# spec:
+#   gateways:
+#   - istio-system/istio-gateway
+#   hosts:
+#   - kibana.zitaconseil.fr
+#   tls:
+#     - match:
+#         - port: 443
+#           sniHosts:
+#             - kibana.zitaconseil.fr
+#       route:
+#         - destination:
+#             host: kibana-kb-http.elastic-system.svc.cluster.local
+#             port:
+#               number: 5601
+
+---
+
+# APM Server Deployment
+apiVersion: apm.k8s.elastic.co/v1
+kind: ApmServer
+metadata:
+  name: apm-server
+  namespace: elastic-system
+spec:
+  version: 9.1.2
+  count: 1
+  http:
+    tls:
+      selfSignedCertificate:
+        disabled: true
+  elasticsearchRef:
+    name: elasticsearch
+  podTemplate:
+    spec:
+      containers:
+        - name: apm-server
+          resources:
+            requests:
+              memory: 512Mi
+              cpu: 0.25
+            limits:
+              memory: 1Gi
+              cpu: 0.5
+
+---
+
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: obs-instrumentation
+  namespace: observability
+spec:
+  exporter:
+    endpoint: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
+  
+  propagators:
+    - tracecontext
+    - baggage
+    - b3
+  
+  sampler:
+    type: parentbased_traceidratio
+    argument: "1.0"
+
+  nodejs:
+    env:
+      # Required if endpoint is set to 4317.
+      # Python autoinstrumentation uses http/proto by default
+      # so data must be sent to 4318 instead of 4317.
+      # - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      #   value: http://otel-collector:4318
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
+      - name: OTEL_EXPORTER_OTLP_HEADERS
+        value: "Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO"
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: "deployment.environment=MINT"
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp  # ACTIVER les logs OTLP
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
+      - name: OTEL_LOG_LEVEL
+        value: INFO
+
+  python:
+#    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:1.28.1
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
+      - name: OTEL_EXPORTER_OTLP_HEADERS
+        value: "Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO"
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: "deployment.environment=MINT"
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp  # ACTIVER les logs OTLP
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: http/protobuf
+      - name: OTEL_LOG_LEVEL
+        value: INFO
+
+
+  java:
+    #image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.17.0
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://apm-server-apm-http.elastic-system.svc.cluster.local:8200
+      - name: OTEL_EXPORTER_OTLP_HEADERS
+        value: "Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO"
+      - name: OTEL_RESOURCE_ATTRIBUTES
+        value: "deployment.environment=MINT"
+      # - name: OTEL_SERVICE_NAME
+      #   valueFrom:
+      #     fieldRef:
+      #       fieldPath: metadata.labels['app.kubernetes.io/version']
+      - name: OTEL_TRACES_EXPORTER
+        value: otlp
+      - name: OTEL_METRICS_EXPORTER
+        value: otlp
+      - name: OTEL_LOGS_EXPORTER
+        value: otlp  # ACTIVER les logs OTLP
+      - name: OTEL_EXPORTER_OTLP_PROTOCOL
+        value: grpc
+      - name: OTEL_LOG_LEVEL
+        value: INFO
+      
+      # Configuration des logs
+      - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED
+        value: "true"  # ACTIVER l'appender Logback
+      - name: OTEL_INSTRUMENTATION_LOGBACK_MDC_ADD_BAGGAGE
+        value: "true"
+      
+      # Autres instrumentations
+      - name: OTEL_INSTRUMENTATION_SPRING_WEBMVC_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_JDBC_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_HTTP_CLIENT_ENABLED
+        value: "true"
+      - name: OTEL_INSTRUMENTATION_SPRING_BOOT_ENABLED
+        value: "true"

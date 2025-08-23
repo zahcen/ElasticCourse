@@ -1,0 +1,29 @@
+---
+# Confirm launching this playbook
+- name: Confirmation
+  import_playbook: confirmation.yml
+
+- hosts: localhost
+  any_errors_fatal: true
+  gather_facts: no
+  tasks:
+    #kubectl create -f https://download.elastic.co/downloads/eck/3.1.0/crds.yaml
+    - name: Install ECK CRDs
+      command: kubectl apply -f https://download.elastic.co/downloads/eck/3.1.0/crds.yaml
+      register: crd_status
+      failed_when: crd_status.rc != 0
+    
+    #kubectl apply -f https://download.elastic.co/downloads/eck/3.1.0/operator.yaml
+    - name: Install ECK operator
+      command: kubectl apply -f https://download.elastic.co/downloads/eck/3.1.0/operator.yaml
+      register: operator_status
+      failed_when: operator_status.rc != 0
+
+    #kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.18.2/cert-manager.yaml
+    - name: Install cert-manager
+      command: kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.18.2/cert-manager.yaml
+      register: cert_manager_status
+      failed_when: cert_manager_status.rc != 0
+    
+
+
