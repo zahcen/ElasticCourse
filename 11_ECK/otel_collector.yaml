@@ -24,7 +24,8 @@ spec:
 
     exporters:
       # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
-      debug: {}
+      debug:
+        verbosity: detailed
       otlp/apm:
         endpoint: "http://apm-server-apm-http.elastic-system.svc.cluster.local:8200"
         tls:
@@ -45,8 +46,8 @@ spec:
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [debug]
+          exporters: [debug, otlp/apm, otlp]
         logs:
           receivers: [otlp]
           processors: [batch]
-          exporters: [debug]
+          exporters: [debug, otlp/apm, otlp]
