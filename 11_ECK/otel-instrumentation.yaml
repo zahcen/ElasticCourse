@@ -61,8 +61,8 @@ spec:
     env:
     - name: OTEL_EXPORTER_OTLP_ENDPOINT
       value: http://otel-collector-collector.observability.svc.cluster.local:4318
-    - name: OTEL_EXPORTER_OTLP_HEADERS
-      value: Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO
+    # - name: OTEL_EXPORTER_OTLP_HEADERS
+    #   value: Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO
     - name: OTEL_RESOURCE_ATTRIBUTES
       value: "deployment.environment=MINT"
       
