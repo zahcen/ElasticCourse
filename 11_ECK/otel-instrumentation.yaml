@@ -64,7 +64,8 @@ spec:
     - name: OTEL_EXPORTER_OTLP_HEADERS
       value: Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO
     - name: OTEL_RESOURCE_ATTRIBUTES
-      value: deployment.environment=MINT
+      value: "deployment.environment=MINT"
+      
     - name: OTEL_TRACES_EXPORTER
       value: otlp
     - name: OTEL_METRICS_EXPORTER
