@@ -9,14 +9,9 @@ metadata:
     instrumentation.opentelemetry.io/default-auto-instrumentation-nginx-image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-apache-httpd:1.0.4
     instrumentation.opentelemetry.io/default-auto-instrumentation-nodejs-image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-nodejs:0.62.0
     instrumentation.opentelemetry.io/default-auto-instrumentation-python-image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.57b0
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"opentelemetry.io/v1alpha1","kind":"Instrumentation","metadata":{"annotations":{},"name":"otel-instrumentation","namespace":"observability"},"spec":{"exporter":{"endpoint":"http://otel-collector-collector.observability.svc.cluster.local:4318"},"java":{"env":[{"name":"OTEL_EXPORTER_OTLP_ENDPOINT","value":"http://otel-collector-collector.observability.svc.cluster.local:4318"},{"name":"OTEL_EXPORTER_OTLP_HEADERS","value":"Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO"},{"name":"OTEL_RESOURCE_ATTRIBUTES","value":"deployment.environment=MINT"},{"name":"OTEL_TRACES_EXPORTER","value":"otlp"},{"name":"OTEL_METRICS_EXPORTER","value":"otlp"},{"name":"OTEL_LOGS_EXPORTER","value":"otlp"},{"name":"OTEL_EXPORTER_OTLP_PROTOCOL","value":"http/protobuf"},{"name":"OTEL_LOG_LEVEL","value":"INFO"},{"name":"OTEL_EXPORTER_OTLP_INSECURE","value":"true"},{"name":"OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED","value":"true"},{"name":"OTEL_INSTRUMENTATION_LOGBACK_MDC_ADD_BAGGAGE","value":"true"},{"name":"OTEL_INSTRUMENTATION_SPRING_WEBMVC_ENABLED","value":"true"},{"name":"OTEL_INSTRUMENTATION_JDBC_ENABLED","value":"true"},{"name":"OTEL_INSTRUMENTATION_HTTP_CLIENT_ENABLED","value":"true"},{"name":"OTEL_INSTRUMENTATION_SPRING_BOOT_ENABLED","value":"true"}]},"nodejs":{"env":[{"name":"OTEL_EXPORTER_OTLP_ENDPOINT","value":"http://otel-collector-collector.observability.svc.cluster.local:4318"},{"name":"OTEL_EXPORTER_OTLP_HEADERS","value":"Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO"},{"name":"OTEL_RESOURCE_ATTRIBUTES","value":"deployment.environment=MINT"},{"name":"OTEL_TRACES_EXPORTER","value":"otlp"},{"name":"OTEL_METRICS_EXPORTER","value":"otlp"},{"name":"OTEL_LOGS_EXPORTER","value":"otlp"},{"name":"OTEL_EXPORTER_OTLP_PROTOCOL","value":"http/protobuf"},{"name":"OTEL_LOG_LEVEL","value":"INFO"},{"name":"OTEL_EXPORTER_OTLP_INSECURE","value":"true"}]},"propagators":["tracecontext","baggage","b3"],"python":{"env":[{"name":"OTEL_EXPORTER_OTLP_ENDPOINT","value":"http://otel-collector-collector.observability.svc.cluster.local:4318"},{"name":"OTEL_EXPORTER_OTLP_HEADERS","value":"Authorization=Bearer KA9Q7p471Wx0S49kSP81RoyO"},{"name":"OTEL_RESOURCE_ATTRIBUTES","value":"deployment.environment=MINT"},{"name":"OTEL_TRACES_EXPORTER","value":"otlp"},{"name":"OTEL_METRICS_EXPORTER","value":"otlp"},{"name":"OTEL_LOGS_EXPORTER","value":"otlp"},{"name":"OTEL_EXPORTER_OTLP_PROTOCOL","value":"http/protobuf"},{"name":"OTEL_LOG_LEVEL","value":"INFO"},{"name":"OTEL_EXPORTER_OTLP_INSECURE","value":"true"}]},"sampler":{"argument":"1.0","type":"parentbased_traceidratio"}}}
-  creationTimestamp: "2025-08-26T14:14:34Z"
-  generation: 5
   name: otel-instrumentation
   namespace: observability
   resourceVersion: "40487397"
-  uid: 128e7923-f7f8-48db-b940-c58f7fa85bbd
 spec:
   apacheHttpd:
     configPath: /usr/local/apache2/conf
@@ -79,7 +74,9 @@ spec:
     - name: OTEL_EXPORTER_OTLP_PROTOCOL
       value: http/protobuf
     - name: OTEL_LOG_LEVEL
-      value: DEBUG
+      value: info
+    - name: OTEL_JAVAAGENT_DEBUG
+      value: "true"      
     - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
     - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED
@@ -94,6 +91,12 @@ spec:
       value: "true"
     - name: OTEL_INSTRUMENTATION_SPRING_BOOT_ENABLED
       value: "true"
+    # - name: OTEL_PROPAGATORS
+    #   value: tracecontext,baggage,b3multi,b3
+    - name: OTEL_TRACES_SAMPLER
+      value: always_on
+    # - name: OTEL_TRACES_SAMPLER_ARG
+    #   value: "1.0"
     image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:1.33.6
     resources:
       limits:

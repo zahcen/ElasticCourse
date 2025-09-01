@@ -19,8 +19,8 @@ spec:
         limit_percentage: 75
         spike_limit_percentage: 15
       batch:
-        send_batch_size: 10000
-        timeout: 10s
+        send_batch_size: 100
+        timeout: 5s
 
     exporters:
       # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
@@ -32,22 +32,24 @@ spec:
           insecure: true
         headers:
           Authorization: "Bearer KA9Q7p471Wx0S49kSP81RoyO"
-      otlp:
+      otlp/jaeger:
         endpoint: "http://jaeger-collector.istio-system.svc.cluster.local:4317"
         tls:
           insecure: true
+      prometheus:
+        endpoint: "0.0.0.0:9464"   # Prometheus exporter port
 
     service:
       pipelines:
         traces:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [debug, otlp/apm, otlp] 
+          exporters: [debug, otlp/apm, otlp/jaeger] 
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [debug, otlp/apm, otlp]
+          exporters: [debug, otlp/apm, prometheus]
         logs:
           receivers: [otlp]
           processors: [batch]
-          exporters: [debug, otlp/apm, otlp]
+          exporters: [debug, otlp/apm]
