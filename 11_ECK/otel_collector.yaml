@@ -50,8 +50,6 @@ spec:
         endpoint: "https://ttp98716.live.dynatrace.com/api/v2/otlp"
         tls:
           insecure: false
-#        headers:
-#          Authorization: "Api-Token dt0c01.CDP64BGBYHHEDQJRD4V7VXYN.CJSLILVX3POC3ZECOEMXG4BVE2PCZQ6DUN7OPKOX43BVXTUTDMO4ONV3JBT4TFIV"
 
     service:
       pipelines:
