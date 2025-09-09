@@ -5,7 +5,7 @@ metadata:
   namespace: observability
 spec:
   mode: daemonset
-  config:
+  config:        
     receivers:
       otlp:
         protocols:
@@ -21,6 +21,14 @@ spec:
       batch:
         send_batch_size: 100
         timeout: 5s
+        
+      transform/group_shop_pages:
+        error_mode: ignore
+        trace_statements:
+        - context: span
+          statements:
+          - set(attributes["transaction.name"], "Shop pages") where attributes["http.target"] matches "^/p/.*$"
+
 
     exporters:
       # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
@@ -38,18 +46,24 @@ spec:
           insecure: true
       prometheus:
         endpoint: "0.0.0.0:9464"   # Prometheus exporter port
+      otlphttp:
+        endpoint: "https://ttp98716.live.dynatrace.com/api/v2/otlp"
+        tls:
+          insecure: false
+        headers:
+          Authorization: "Api-Token dt0c01.CDP64BGBYHHEDQJRD4V7VXYN.CJSLILVX3POC3ZECOEMXG4BVE2PCZQ6DUN7OPKOX43BVXTUTDMO4ONV3JBT4TFIV"
 
     service:
       pipelines:
         traces:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [debug, otlp/apm, otlp/jaeger] 
+          exporters: [otlp/apm, otlp/jaeger, otlphttp] 
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [debug, otlp/apm, prometheus]
+          exporters: [otlp/apm, prometheus, otlphttp]
         logs:
           receivers: [otlp]
           processors: [batch]
-          exporters: [debug, otlp/apm]
+          exporters: [otlp/apm, otlphttp]
