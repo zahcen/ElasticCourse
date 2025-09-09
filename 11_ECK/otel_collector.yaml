@@ -5,7 +5,7 @@ metadata:
   namespace: observability
 spec:
   mode: daemonset
-  image: otel/opentelemetry-collector-contrib:0.134.0
+  image: otel/opentelemetry-collector-contrib:0.133.0
   config:        
     receivers:
       otlp:
