@@ -22,7 +22,7 @@ spec:
         send_batch_size: 100
         timeout: 5s
         
-    trace_statements:
+      trace_statements:
           - context: span
             statements:
               # Normalize product routes
