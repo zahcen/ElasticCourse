@@ -5,7 +5,7 @@ metadata:
   namespace: observability
 spec:
   mode: daemonset
-  image: otel/opentelemetry-collector-contrib
+  image: otel/opentelemetry-collector-contrib:0.134.0
   config:        
     receivers:
       otlp:
@@ -22,13 +22,7 @@ spec:
       batch:
         send_batch_size: 100
         timeout: 5s
-      cascading_filter:
-        actions:
-          - match_type: regexp
-            context: span
-            key: name
-            pattern: ".*health.*"
-            action: drop
+
 
     exporters:
       # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
@@ -57,7 +51,7 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [cascading_filter, memory_limiter, batch]
+          processors: [memory_limiter, batch]
           exporters: [otlp/apm, otlp/jaeger, otlphttp] 
         metrics:
           receivers: [otlp]
