@@ -22,15 +22,19 @@ spec:
         send_batch_size: 100
         timeout: 5s
         
-      span/group_shop_pages:
-          name:
-            to_attributes: false
+    trace_statements:
+          - context: span
             statements:
-              - key: transaction.name
-                action: upsert
-                value: "Shop pages"
-                conditions:
-                  - attributes["http.target"] =~ "^/p/.*$"
+              # Normalize product routes
+              - replace_pattern(attributes["http.route"], "/p/.*", "/product") where attributes["http.route"] != nil
+              - replace_pattern(name, "/p/.*", "/product") where name != nil
+              
+              # Group user profile routes
+              - replace_pattern(attributes["http.route"], "/user/[^/]+/profile", "/user/{id}/profile") where attributes["http.route"] != nil
+              - replace_pattern(name, "/user/[^/]+/profile", "/user/{id}/profile") where name != nil
+              
+              # Normalize API version paths
+              - replace_pattern(attributes["http.route"], "/api/v[0-9]+/(.*)", "/api/{version}/$1") where attributes["http.route"] != nil
 
 
     exporters:
@@ -60,7 +64,7 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [span/group_shop_pages,memory_limiter, batch]
+          processors: [memory_limiter, batch]
           exporters: [otlp/apm, otlp/jaeger, otlphttp] 
         metrics:
           receivers: [otlp]
