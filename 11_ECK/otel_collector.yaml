@@ -22,12 +22,15 @@ spec:
         send_batch_size: 100
         timeout: 5s
         
-      transform/group_shop_pages:
-        error_mode: ignore
-        trace_statements:
-        - context: span
-          statements:
-          - set(attributes["transaction.name"], "Shop pages") where attributes["http.target"] matches "^/p/.*$"
+      span/group_shop_pages:
+          name:
+            to_attributes: false
+            statements:
+              - key: transaction.name
+                action: upsert
+                value: "Shop pages"
+                conditions:
+                  - attributes["http.target"] =~ "^/p/.*$"
 
 
     exporters:
@@ -57,7 +60,7 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [memory_limiter, batch]
+          processors: [span/group_shop_pages,memory_limiter, batch]
           exporters: [otlp/apm, otlp/jaeger, otlphttp] 
         metrics:
           receivers: [otlp]
