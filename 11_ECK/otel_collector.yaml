@@ -22,14 +22,16 @@ spec:
       batch:
         send_batch_size: 100
         timeout: 5s
-      cascading_filter:
-        trace_reject_filters:
-          - name: remove-health-span
-            attributes:
-            - key: http.target
-              use_regex: true
-              values:
-               (/shop/p/[Hh]ealth.*|/\\?_rsc=)
+      filter/spans:
+        traces:
+          span:
+            # Drop spans if attribute http.target or http.url contains "/health"
+            - 'attributes["http.target"] == "/health"'
+            - 'IsMatch(attributes["http.url"], ".*/health.*")'
+            - 'attributes["http.user_agent"] == "Yabbix"'
+            - 'IsMatch(attributes["http.user_agent"],"[zZ]abbix")'
+            - 'IsMatch(attributes["http.url"], "/\\?_rsc=")'
+
       transform/product_page:
               trace_statements:
                 - context: span
@@ -68,7 +70,7 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [cascading_filter,transform/product_page,memory_limiter, batch]
+          processors: [filter/spans,transform/product_page,memory_limiter, batch]
           exporters: [otlp/apm, otlp/jaeger, otlphttp] 
         metrics:
           receivers: [otlp]
