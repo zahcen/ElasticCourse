@@ -29,7 +29,7 @@ spec:
             - 'attributes["http.target"] == "/health"'
             - 'IsMatch(attributes["http.url"], ".*/health.*")'
             - 'attributes["http.user_agent"] == "Yabbix"'
-            - 'IsMatch(attributes["http.user_agent"],"[zZ]abbix")'
+            # - 'IsMatch(attributes["http.user_agent"],"[zZ]abbix")'
             - 'IsMatch(attributes["http.url"], "/\\?_rsc=")'
 
       transform/product_page:
@@ -41,6 +41,7 @@ spec:
                     #- set(name, "Category Page") where IsMatch(attributes["http.target"], "^/c/.*")
                     - set(name, "Product") where IsMatch(attributes["x-transaction-name"], "^product-page$")
                     - set(name, "Category") where IsMatch(attributes["x-transaction-name"], "^category-page$")
+                    - set(name, "Zabbix") where IsMatch(attributes["http.user_agent"], "[zZ]abbix")
       
 
     exporters:
