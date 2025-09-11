@@ -22,12 +22,24 @@ spec:
       batch:
         send_batch_size: 100
         timeout: 5s
+      cascading_filter:
+        trace_reject_filters:
+          - name: remove-health-span
+            attributes:
+            - key: http.target
+              use_regex: true
+              values:
+               (/shop/p/[Hh]ealth.*|/\\?_rsc=)
       transform/product_page:
               trace_statements:
                 - context: span
                   statements:
                     # If the span name starts with /p/, rename it to "Product Page"
-                    - set(name, "Product Page") where IsMatch(attributes["http.target"], "^/p/.*")
+                    #- set(name, "Product Page") where IsMatch(attributes["http.target"], "^/p/.*")
+                    #- set(name, "Category Page") where IsMatch(attributes["http.target"], "^/c/.*")
+                    - set(name, "Product") where IsMatch(attributes["x-transaction-name"], "^product-page$")
+                    - set(name, "Category") where IsMatch(attributes["x-transaction-name"], "^category-page$")
+      
 
     exporters:
       # NOTE: Prior to v0.86.0 use `logging` instead of `debug`.
@@ -56,7 +68,7 @@ spec:
       pipelines:
         traces:
           receivers: [otlp]
-          processors: [transform/product_page,memory_limiter, batch]
+          processors: [cascading_filter,transform/product_page,memory_limiter, batch]
           exporters: [otlp/apm, otlp/jaeger, otlphttp] 
         metrics:
           receivers: [otlp]

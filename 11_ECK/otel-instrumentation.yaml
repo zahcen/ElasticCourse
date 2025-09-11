@@ -11,7 +11,6 @@ metadata:
     instrumentation.opentelemetry.io/default-auto-instrumentation-python-image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.57b0
   name: otel-instrumentation
   namespace: observability
-  resourceVersion: "40487397"
 spec:
   apacheHttpd:
     configPath: /usr/local/apache2/conf
@@ -141,7 +140,7 @@ spec:
     - name: OTEL_EXPORTER_OTLP_PROTOCOL
       value: http/protobuf
     - name: OTEL_LOG_LEVEL
-      value: INFO
+      value: DEBUG
     - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
     - name: OTEL_TRACES_SAMPLER
@@ -183,6 +182,7 @@ spec:
       value: INFO
     - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
+
     image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-python:0.57b0
     resourceRequirements:
       limits:
