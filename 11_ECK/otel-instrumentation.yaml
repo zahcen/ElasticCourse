@@ -65,6 +65,8 @@ spec:
     - name: OTEL_RESOURCE_ATTRIBUTES
       value: "deployment.environment=MINT"
       
+    - name: OTEL_INSTRUMENTATION_LOG4J-APPENDER_ENABLED
+      value: "true"
     - name: OTEL_TRACES_EXPORTER
       value: otlp
     - name: OTEL_METRICS_EXPORTER
@@ -74,7 +76,7 @@ spec:
     - name: OTEL_EXPORTER_OTLP_PROTOCOL
       value: http/protobuf
     - name: OTEL_LOG_LEVEL
-      value: info
+      value: debug
     - name: OTEL_JAVAAGENT_DEBUG
       value: "false"      
     - name: OTEL_EXPORTER_OTLP_INSECURE
