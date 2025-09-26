@@ -72,12 +72,12 @@ spec:
         traces:
           receivers: [otlp]
           processors: [filter/spans,transform/product_page,memory_limiter, batch]
-          exporters: [otlp/apm, otlp/jaeger, otlphttp] 
+          exporters: [debug,otlp/apm, otlp/jaeger] 
         metrics:
           receivers: [otlp]
           processors: [memory_limiter, batch]
-          exporters: [otlp/apm, prometheus, otlphttp]
+          exporters: [debug, otlp/apm, prometheus]
         logs:
           receivers: [otlp]
           processors: [batch]
-          exporters: [otlp/apm, otlphttp]
+          exporters: [debug, otlp/apm]

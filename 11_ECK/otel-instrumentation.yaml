@@ -78,7 +78,7 @@ spec:
     - name: OTEL_LOG_LEVEL
       value: debug
     - name: OTEL_JAVAAGENT_DEBUG
-      value: "false"      
+      value: "true"      
     - name: OTEL_EXPORTER_OTLP_INSECURE
       value: "true"
     - name: OTEL_INSTRUMENTATION_LOGBACK_APPENDER_ENABLED
