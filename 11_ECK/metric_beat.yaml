@@ -83,6 +83,9 @@ spec:
             name: dockersock
           - mountPath: /hostfs/proc
             name: proc
+          
+          - mountPath: /hostfs
+            name: hostfs            
           env:
           - name: NODE_NAME
             valueFrom:
@@ -104,6 +107,10 @@ spec:
         - hostPath:
             path: /proc
           name: proc
+        
+        - hostPath:
+            path: /
+          name: hostfs
 ---
 # permissions needed for metricbeat
 # source: https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-module-kubernetes.html
