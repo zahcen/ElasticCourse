@@ -92,8 +92,8 @@ spec:
         hostNetwork: true # Allows to provide richer host metadata
         hostPID: true #Added Claude
         securityContext:
-          runAsUser: 0
           privileged: true #Added Claude
+          runAsUser: 0
         terminationGracePeriodSeconds: 30
         volumes:
         - hostPath:
