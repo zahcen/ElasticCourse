@@ -90,8 +90,10 @@ spec:
                 fieldPath: spec.nodeName
         dnsPolicy: ClusterFirstWithHostNet
         hostNetwork: true # Allows to provide richer host metadata
+        hostPID: true #Added Claude
         securityContext:
           runAsUser: 0
+          privileged: true #Added Claude
         terminationGracePeriodSeconds: 30
         volumes:
         - hostPath:
