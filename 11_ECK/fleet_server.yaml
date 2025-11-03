@@ -29,6 +29,7 @@ spec:
 ---
 
 kind: VirtualService
+apiVersion: networking.istio.io/v1
 metadata:
   name: fleet-vs
   namespace: elastic-system
