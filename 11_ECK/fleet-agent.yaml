@@ -17,7 +17,11 @@ spec:
     podTemplate:
       spec:
         containers:
+          - env:
+            - name: FLEET_ENROLLMENT_TOKEN
+              value: "SXNIX1Nab0JVb3ZvUnhyYlF0V046bWpOQUhnWFJfd2o3dmE0dFcwaWQydw=="
           - name: agent
+
             resources:
               requests:
                 cpu: "100m"
