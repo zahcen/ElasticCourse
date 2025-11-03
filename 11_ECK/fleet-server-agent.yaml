@@ -9,7 +9,7 @@ spec:
   fleetServerRef:
     name: fleet-server
     namespace: elastic-system
-  policyID: default-policy
+  policyID: "Fleet Server Policy"
   deployment:
     replicas: 2
     podTemplate:
