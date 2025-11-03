@@ -1,0 +1,25 @@
+apiVersion: agent.k8s.elastic.co/v1alpha1
+kind: Agent
+metadata:
+  name: fleet-agent
+  namespace: elastic-system
+spec:
+  version: 8.15.0
+  mode: fleet
+  fleetServerRef:
+    name: fleet-server
+    namespace: elastic-system
+  policyID: default-policy
+  deployment:
+    replicas: 2
+    podTemplate:
+      spec:
+        containers:
+          - name: agent
+            resources:
+              requests:
+                cpu: "100m"
+                memory: "256Mi"
+              limits:
+                cpu: "500m"
+                memory: "512Mi"
