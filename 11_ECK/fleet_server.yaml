@@ -61,3 +61,40 @@ spec:
         tls:
           mode: SIMPLE  # enables HTTPS
           insecureSkipVerify: true
+
+
+---
+
+kind: VirtualService
+apiVersion: networking.istio.io/v1
+metadata:
+  name: elasticsearch-vs
+  namespace: elastic-system
+spec:
+  gateways:
+  - istio-system/cert-manager-gateway
+  hosts:
+  - elastic.zitaconseil.fr
+  http:
+  - route:
+    - destination:
+        host: elasticsearch-es-http.elastic-system.svc.cluster.local
+        port:
+          number: 9200
+
+---
+
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: elasticsearch-dr
+  namespace: elastic-system
+spec:
+  host: elasticsearch-es-http.elastic-system.svc.cluster.local
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 9200
+        tls:
+          mode: SIMPLE  # enables HTTPS
+          insecureSkipVerify: true          
