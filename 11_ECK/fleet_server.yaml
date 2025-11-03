@@ -25,3 +25,21 @@ spec:
               limits:
                 cpu: "1"
                 memory: "1Gi"
+
+---
+
+kind: VirtualService
+metadata:
+  name: fleet-vs
+  namespace: elastic-system
+spec:
+  gateways:
+  - istio-system/cert-manager-gateway
+  hosts:
+  - fleet.zitaconseil.fr
+  http:
+  - route:
+    - destination:
+        host: fleet-server-agent-http.elastic-system.svc.cluster.local
+        port:
+          number: 8220
