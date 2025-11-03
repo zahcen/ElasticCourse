@@ -1,0 +1,27 @@
+apiVersion: agent.k8s.elastic.co/v1alpha1
+kind: Agent
+metadata:
+  name: fleet-server
+  namespace: elastic-system
+spec:
+  version: 9.1.2  # Match your Elasticsearch/Kibana version
+  elasticsearchRefs:
+    - name: elasticsearch
+  kibanaRef:
+    name: kibana
+  mode: fleet
+  fleetServerEnabled: true
+  policyID: fleet-server-policy
+  deployment:
+    replicas: 1
+    podTemplate:
+      spec:
+        containers:
+          - name: agent
+            resources:
+              requests:
+                cpu: "200m"
+                memory: "512Mi"
+              limits:
+                cpu: "1"
+                memory: "1Gi"
