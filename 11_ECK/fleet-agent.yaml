@@ -7,10 +7,11 @@ spec:
   version: 9.1.2
   mode: fleet
   fleetServerEnabled: false
+  policyRef:
+    name: agent-policy
   fleetServerRef:
     name: fleet-server
     namespace: elastic-system
-    enrollmentToken: SXNIX1Nab0JVb3ZvUnhyYlF0V046bWpOQUhnWFJfd2o3dmE0dFcwaWQydw==
   deployment:
     replicas: 1
     podTemplate:
