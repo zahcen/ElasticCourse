@@ -44,3 +44,20 @@ spec:
         host: fleet-server-agent-http.elastic-system.svc.cluster.local
         port:
           number: 8220
+
+---
+
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: fleet-dr
+  namespace: elastic-system
+spec:
+  host: fleet-server-agent-http.elastic-system.svc.cluster.local
+  trafficPolicy:
+    portLevelSettings:
+      - port:
+          number: 8220
+        tls:
+          mode: SIMPLE  # enables HTTPS
+          insecureSkipVerify: true
