@@ -7,16 +7,23 @@ spec:
   version: 9.1.2
   mode: fleet
   fleetServerEnabled: false
+  kibanaRef:
+    name: kibana  
+    namespace: elastic-system
   fleetServerRef:
     name: fleet-server
     namespace: elastic-system
-    enrollmentToken: SXNIX1Nab0JVb3ZvUnhyYlF0V046bWpOQUhnWFJfd2o3dmE0dFcwaWQydw==
+  policyID: agent-policy
   deployment:
     replicas: 1
     podTemplate:
       spec:
         containers:
+          - env:
+            - name: FLEET_ENROLLMENT_TOKEN
+              value: "SXNIX1Nab0JVb3ZvUnhyYlF0V046bWpOQUhnWFJfd2o3dmE0dFcwaWQydw=="
           - name: agent
+
             resources:
               requests:
                 cpu: "100m"
@@ -24,3 +31,57 @@ spec:
               limits:
                 cpu: "500m"
                 memory: "512Mi"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: elastic-agent
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources:
+  - pods
+  - nodes
+  - namespaces
+  verbs:
+  - get
+  - watch
+  - list
+- apiGroups: ["coordination.k8s.io"]
+  resources:
+  - leases
+  verbs:
+  - get
+  - create
+  - update
+- apiGroups: ["apps"]
+  resources:
+  - replicasets
+  verbs:
+  - list
+  - watch
+- apiGroups: ["batch"]
+  resources:
+  - jobs
+  verbs:
+  - list
+  - watch
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: elastic-agent
+  namespace: elastic-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: elastic-agent
+subjects:
+- kind: ServiceAccount
+  name: elastic-agent
+  namespace: elastic-system
+roleRef:
+  kind: ClusterRole
+  name: elastic-agent
+  apiGroup: rbac.authorization.k8s.io                
