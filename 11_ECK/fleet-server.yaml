@@ -18,13 +18,6 @@ spec:
       spec:
         containers:
           - name: agent
-            env:
-              # Disable TLS verification for Elasticsearch
-              - name: FLEET_ELASTICSEARCH_INSECURE
-                value: "true"
-              # Disable TLS verification for Kibana
-              - name: FLEET_INSECURE
-                value: "true"
             resources:
               requests:
                 cpu: "200m"
